@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Tamilarasan R · Futuristic 3D Metaverse · Voice AI</title>
+  <!-- Fonts: Orbitron + Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body { margin: 0; overflow-x: hidden; font-family: 'Inter', sans-serif; background-color: #0f0f12; color: #f5f5f5; }
+    #canvas-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; }
+    
+    /* overlay content */
+    .content-overlay {
+      position: relative;
+      z-index: 20;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      pointer-events: none;
+    }
+    
+    .section-spacer { height: 100vh; pointer-events: none; }
+    
+    /* floating animation for cards */
+    @keyframes float {
+      0% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(-8px) translateX(2px); }
+      100% { transform: translateY(0px) translateX(0px); }
+    }
+    
+    /* holographic glass panels - subtle red with floating */
+    .hologram-card {
+      background: rgba(15, 15, 20, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 77, 77, 0.15);
+      border-radius: 48px;
+      padding: 2.5rem;
+      box-shadow: 0 0 20px rgba(255, 77, 77, 0.05), inset 0 0 15px rgba(255, 122, 122, 0.03);
+      max-width: 700px;
+      margin: 0 0 0 auto;
+      pointer-events: auto;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border-left: 4px solid #ff4d4d;
+      font-family: 'Inter', sans-serif;
+      animation: float 6s ease-in-out infinite;
+      will-change: transform;
+    }
+    .hologram-card.left { margin-left: 0; margin-right: auto; }
+    .hologram-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 0 30px rgba(255, 77, 77, 0.1), inset 0 0 20px rgba(255, 122, 122, 0.05);
+      animation: none;
+    }
+    
+    .hologram-card:nth-child(odd) { animation-duration: 7s; animation-delay: 0.2s; }
+    .hologram-card:nth-child(3) { animation-duration: 8s; animation-delay: 0.5s; }
+    .hologram-card:nth-child(5) { animation-duration: 6.5s; animation-delay: 0.1s; }
+    
+    h1, h2, h3 { font-family: 'Orbitron', sans-serif; font-weight: 600; letter-spacing: 1px; }
+    h1 { font-size: 4.5rem; text-shadow: 0 0 10px rgba(255, 77, 77, 0.3); }
+    .neon-text { color: #ff4d4d; text-shadow: 0 0 5px rgba(255, 77, 77, 0.3); }
+    
+    /* skill nodes */
+    .skill-panel {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255, 77, 77, 0.15);
+      border-radius: 30px;
+      padding: 1.2rem 2rem;
+      margin: 0.5rem;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 10px rgba(255, 77, 77, 0.05);
+      transition: 0.2s;
+      cursor: pointer;
+      animation: float 5s ease-in-out infinite;
+      will-change: transform;
+    }
+    .skill-panel:nth-child(2) { animation-duration: 5.5s; animation-delay: 0.3s; }
+    .skill-panel:nth-child(3) { animation-duration: 6s; animation-delay: 0.7s; }
+    .skill-panel:nth-child(4) { animation-duration: 4.5s; animation-delay: 0.1s; }
+    .skill-panel:hover {
+      transform: scale(1.05) rotateY(2deg);
+      border-color: rgba(255, 77, 77, 0.3);
+      box-shadow: 0 0 20px rgba(255, 77, 77, 0.1);
+      animation: none;
+    }
+
+    /* workshop cards */
+    .workshop-card {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255, 77, 77, 0.15);
+      border-radius: 30px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 10px rgba(255, 77, 77, 0.05);
+      transition: 0.2s;
+      animation: float 7s ease-in-out infinite;
+      will-change: transform;
+    }
+    .workshop-card:last-child { animation-duration: 8s; animation-delay: 0.4s; }
+    .workshop-card:hover {
+      transform: scale(1.02) translateX(5px);
+      border-color: rgba(255, 77, 77, 0.3);
+      box-shadow: 0 0 20px rgba(255, 77, 77, 0.1);
+      animation: none;
+    }
+    .workshop-card h3 {
+      color: #ff7a7a;
+      margin-bottom: 0.8rem;
+      font-size: 1.5rem;
+    }
+    .workshop-card p {
+      color: #ddd;
+      line-height: 1.6;
+    }
+    
+    /* HUD */
+    .hud {
+      position: fixed;
+      top: 30px; left: 30px;
+      z-index: 100;
+      background: rgba(10,10,15,0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 77, 77, 0.2);
+      border-radius: 60px;
+      padding: 1rem 2rem;
+      font-family: 'Orbitron', monospace;
+      color: #ff4d4d;
+      box-shadow: 0 0 15px rgba(255, 77, 77, 0.1);
+      pointer-events: none;
+      animation: float 8s ease-in-out infinite;
+    }
+    .speed-meter { font-size: 2rem; font-weight: 800; }
+    
+    /* AI recruiter chat with voice */
+    .ai-assistant {
+      position: fixed;
+      bottom: 30px; right: 30px;
+      width: 380px;
+      z-index: 300;
+      background: rgba(10,10,15,0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 77, 77, 0.2);
+      border-radius: 40px 40px 20px 20px;
+      padding: 20px;
+      box-shadow: 0 0 25px rgba(255, 77, 77, 0.1);
+      pointer-events: auto;
+      transform-origin: bottom right;
+      animation: orbEntry 1s ease, float 9s ease-in-out 1s infinite;
+    }
+    @keyframes orbEntry {
+      0% { transform: scale(0.2) translateY(50px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .orb-icon {
+      display: flex; align-items: center; gap: 12px; cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .orb-icon i { font-size: 2.5rem; color: #ff4d4d; filter: drop-shadow(0 0 5px rgba(255, 77, 77, 0.3)); }
+    
+    .chat-response {
+      background: rgba(0,0,0,0.5);
+      border-left: 3px solid #ff4d4d;
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 15px;
+      font-family: 'Inter', monospace;
+      min-height: 80px;
+    }
+    .btn-neon {
+      background: transparent;
+      border: 1px solid rgba(255, 77, 77, 0.2);
+      color: #ff4d4d;
+      padding: 10px 18px;
+      border-radius: 60px;
+      font-weight: 600;
+      margin: 5px;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 0 5px rgba(255, 77, 77, 0.1);
+    }
+    .btn-neon:hover {
+      background: rgba(255, 77, 77, 0.1);
+      border-color: rgba(255, 77, 77, 0.4);
+      color: #ff7a7a;
+      transform: scale(1.07) translateY(-2px);
+    }
+    
+    /* voice button and waveform */
+    .voice-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      align-items: center;
+    }
+    .voice-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 77, 77, 0.3);
+      color: #ff4d4d;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .voice-btn:hover {
+      background: rgba(255, 77, 77, 0.2);
+      transform: scale(1.1);
+    }
+    .voice-btn.listening {
+      background: #ff4d4d;
+      color: black;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(255, 77, 77, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+    }
+    
+    .waveform {
+      display: flex;
+      gap: 3px;
+      height: 30px;
+      align-items: center;
+      flex: 1;
+    }
+    .waveform span {
+      width: 4px;
+      height: 15px;
+      background: #ff4d4d;
+      border-radius: 4px;
+      animation: wave 1s infinite ease-in-out;
+      opacity: 0.5;
+    }
+    .waveform span:nth-child(2) { animation-delay: 0.2s; height: 25px; }
+    .waveform span:nth-child(3) { animation-delay: 0.4s; height: 20px; }
+    .waveform span:nth-child(4) { animation-delay: 0.3s; height: 30px; }
+    .waveform span:nth-child(5) { animation-delay: 0.1s; height: 18px; }
+    @keyframes wave {
+      0%,100% { transform: scaleY(0.6); opacity: 0.3; }
+      50% { transform: scaleY(1.2); opacity: 0.8; }
+    }
+    
+    /* loading screen */
+    #loading-screen {
+      position: fixed; inset: 0; background: #0f0f12; z-index: 2000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.8s;
+    }
+    .speedo-future {
+      width: 320px; height: 160px; border-radius: 320px 320px 0 0;
+      border: 4px solid #ff4d4d; border-bottom: none;
+      box-shadow: 0 0 30px rgba(255, 77, 77, 0.2); position: relative;
+    }
+    .needle-future {
+      width: 6px; height: 120px; background: #ff4d4d; position: absolute;
+      bottom: 0; left: 50%; transform-origin: bottom center; transform: rotate(-80deg);
+      border-radius: 6px; transition: transform 2.2s cubic-bezier(0.2,0.9,0.3,1);
+      filter: drop-shadow(0 0 8px rgba(255, 77, 77, 0.4));
+    }
+    #loading-text-future { margin-top: 40px; font-size: 1.8rem; font-family: 'Orbitron'; color: white; text-shadow: 0 0 8px rgba(255, 77, 77, 0.3); }
+    
+    /* scroll indicator */
+    .scroll-cinematic {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ff4d4d;
+      font-size: 2rem;
+      z-index: 100;
+      animation: scrollFloat 2.5s infinite ease-in-out;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    @keyframes scrollFloat {
+      0% { transform: translateX(-50%) translateY(0); opacity: 0.3; }
+      50% { transform: translateX(-50%) translateY(15px); opacity: 0.8; }
+      100% { transform: translateX(-50%) translateY(0); opacity: 0.3; }
+    }
+    
+    /* parallax background */
+    .parallax-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,77,77,0.03) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 1;
+      transform: translateY(0);
+      transition: transform 0.1s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="speedo-future"><div class="needle-future" id="needleFuture"></div></div>
+    <div id="loading-text-future">Initializing Engine... Entering Portfolio Dimension...</div>
+  </div>
+
+  <div id="canvas-container"></div>
+  
+  <!-- Parallax background layer -->
+  <div class="parallax-bg" id="parallaxBg"></div>
+  
+  <!-- HUD dashboard -->
+  <div class="hud">
+    <span class="speed-meter" id="speedDisplay">0</span> <span style="font-size:1rem;">km/h</span> · <span id="sectionIndicator">start</span>
+  </div>
+
+  <!-- AI recruiter chat with voice integration -->
+  <div class="ai-assistant" id="aiChat">
+    <div class="orb-icon" id="chatToggle">
+      <i class="fas fa-robot"></i> <span>AI RECRUITER</span> <i class="fas fa-chevron-up" style="margin-left: auto;"></i>
+    </div>
+    <div id="chatResponses" style="display: none;">
+      <div class="chat-response" id="chatAnswer">
+        <span id="dynamicAnswer">Hello! I'm your AI recruiter. Ask me about Tamilarasan's profile using voice or buttons.</span>
+      </div>
+      
+      <!-- Voice controls -->
+      <div class="voice-controls">
+        <div class="voice-btn" id="voiceBtn">
+          <i class="fas fa-microphone"></i>
+        </div>
+        <div class="waveform" id="waveform">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-wrap: wrap; margin-top: 10px;">
+        <button class="btn-neon" data-q="edu">🎓 Education</button>
+        <button class="btn-neon" data-q="skills">💻 Skills</button>
+        <button class="btn-neon" data-q="workshops">🔧 Workshops</button>
+        <button class="btn-neon" data-q="c">C</button>
+        <button class="btn-neon" data-q="cpp">C++</button>
+        <button class="btn-neon" data-q="java">Java</button>
+        <button class="btn-neon" data-q="python">Python</button>
+        <button class="btn-neon" data-q="contact">📫 Contact</button>
+        <button class="btn-neon" data-q="resume">📄 Summary</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- content panels -->
+  <div class="content-overlay">
+    <div class="section-spacer" id="hero-spacer"></div>
+    <div class="hologram-card left" id="hero-card">
+      <h1>Tamilarasan R</h1>
+      <p style="font-size:2rem;" class="neon-text">Electronics & Communication</p>
+      <p style="font-size:1.2rem; line-height:1.8;">Dedicated and enthusiastic ECE student with knowledge in C, C++, Java, Python. Seeking opportunities in IT or core engineering field.</p>
+    </div>
+
+    <div class="section-spacer" id="edu-spacer"></div>
+    <div class="hologram-card" id="edu-card">
+      <h2 class="neon-text"><i class="fas fa-flag-checkered"></i> Education</h2>
+      <div><strong>B.E – ECE</strong><br>Government College of Engineering, Salem | 2023–2027 (3rd Year)</div>
+      <div style="margin-top:15px;"><strong>12th – 89%</strong></div>
+      <div style="margin-top:8px;"><strong>10th – All Pass</strong></div>
+    </div>
+
+    <div class="section-spacer" id="workshop-spacer"></div>
+    <div class="hologram-card left" id="workshop-card">
+      <h2 class="neon-text"><i class="fas fa-tools"></i> Workshops @ GCE Salem</h2>
+      
+      <div class="workshop-card">
+        <h3>🔧 Hands-on Training with Measuring Instruments</h3>
+        <p>Practical exposure to electronic measuring instruments including CRO, multimeter, signal generators, and advanced circuit testing techniques. Learned calibration methods and troubleshooting of analog and digital systems.</p>
+      </div>
+
+      <div class="workshop-card">
+        <h3>💡 Embedded Systems with IoT</h3>
+        <p>Hands-on experience in microcontroller programming (Arduino, Raspberry Pi), sensor interfacing, and IoT-based communication protocols. Developed real-time projects involving cloud connectivity and data logging.</p>
+      </div>
+      
+      <p style="color:#ff7a7a; margin-top:1rem;"><i class="fas fa-map-marker-alt"></i> Government College of Engineering, Salem</p>
+    </div>
+
+    <div class="section-spacer" id="skill-spacer"></div>
+    <div class="hologram-card" id="skill-card">
+      <h2 class="neon-text"><i class="fas fa-microchip"></i> Skill Arena</h2>
+      <div style="display:flex; flex-wrap:wrap;">
+        <div class="skill-panel" data-skill="c"><strong>C</strong><br>structured prog.</div>
+        <div class="skill-panel" data-skill="cpp"><strong>C++</strong><br>OOP, DSA</div>
+        <div class="skill-panel" data-skill="java"><strong>Java</strong><br>OOP fundamentals</div>
+        <div class="skill-panel" data-skill="python"><strong>Python</strong><br>scripting, logic</div>
+      </div>
+    </div>
+
+    <div class="section-spacer" id="core-spacer"></div>
+    <div class="hologram-card left" id="core-card">
+      <h2 class="neon-text">⚙️ Core Knowledge</h2>
+      <div style="display:flex; flex-wrap:wrap;">
+        <span class="skill-panel">Embedded Systems</span>
+        <span class="skill-panel">Antenna & Comm</span>
+        <span class="skill-panel">DSA</span>
+        <span class="skill-panel">DBMS</span>
+        <span class="skill-panel">Computer Networks</span>
+        <span class="skill-panel">OS</span>
+      </div>
+    </div>
+
+    <div class="section-spacer" id="contact-spacer"></div>
+    <div class="hologram-card" id="contact-card">
+      <h2 class="neon-text"><i class="fas fa-address-card"></i> Contact</h2>
+      <div><i class="fas fa-map-marker-alt"></i> Salem, Tamil Nadu</div>
+      <div><i class="fas fa-envelope"></i> tamil2006king@gmail.com</div>
+      <div><i class="fab fa-linkedin"></i> linkedin.com/in/tamilarasan-r-9a7b803b2</div>
+    </div>
+
+    <div class="section-spacer" id="final-spacer"></div>
+    <div class="hologram-card left" style="text-align:center;" id="final-card">
+      <h2 class="neon-text">Final Pit Lane</h2>
+      <p style="font-size:2rem;">Ready to accelerate into the future.</p>
+      <div style="width:100%; height:2px; background:#ff4d4d; opacity:0.5;"></div>
+    </div>
+    <div style="height:30vh;"></div>
+  </div>
+
+  <!-- Three.js -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+
+    // --- setup futuristic scene ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f0f12);
+    
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 4, 15);
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    // lights
+    const ambient = new THREE.AmbientLight(0x404060);
+    scene.add(ambient);
+    const redLight = new THREE.PointLight(0xff4d4d, 0.4, 30);
+    redLight.position.set(0, 3, 5);
+    scene.add(redLight);
+    
+    // track
+    const trackWidth = 10;
+    const trackLength = 120;
+    const trackGeo = new THREE.PlaneGeometry(trackWidth, trackLength);
+    const trackMat = new THREE.MeshStandardMaterial({ color: 0x111113, roughness: 0.4, metalness: 0.7, emissive: new THREE.Color(0x050505) });
+    const track = new THREE.Mesh(trackGeo, trackMat);
+    track.rotation.x = -Math.PI/2;
+    track.position.y = 0;
+    track.position.z = trackLength/2 - 5;
+    track.receiveShadow = true;
+    scene.add(track);
+
+    // red edges
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0xff4d4d, emissive: new THREE.Color(0x110000) });
+    const leftEdge = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, trackLength), edgeMat);
+    leftEdge.position.set(-trackWidth/2 - 0.2, 0.03, trackLength/2 -5);
+    scene.add(leftEdge);
+    const rightEdge = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, trackLength), edgeMat);
+    rightEdge.position.set(trackWidth/2 + 0.2, 0.03, trackLength/2 -5);
+    scene.add(rightEdge);
+
+    // particles
+    const particleCount = 400;
+    const particleGeo = new THREE.BufferGeometry();
+    const posArray = new Float32Array(particleCount*3);
+    for (let i=0; i<particleCount; i++) {
+      posArray[i*3] = (Math.random()-0.5)*30;
+      posArray[i*3+1] = Math.random()*8;
+      posArray[i*3+2] = (Math.random()-0.5)*120;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray,3));
+    const particleMat = new THREE.PointsMaterial({ color: 0xff4d4d, size: 0.05, transparent:true, opacity:0.15 });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    // car
+    const carGroup = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.6, 5), new THREE.MeshStandardMaterial({ color: 0x222222, emissive: new THREE.Color(0x110000) }));
+    body.position.y = 0.5; body.castShadow = true; body.receiveShadow = true;
+    carGroup.add(body);
+    
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.7, 2.5), new THREE.MeshStandardMaterial({ color: 0x333344, emissive: new THREE.Color(0x110000) }));
+    cabin.position.set(0, 1.0, -0.6); cabin.castShadow = true;
+    carGroup.add(cabin);
+    
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.5), new THREE.MeshStandardMaterial({ color: 0xff4d4d, emissive: new THREE.Color(0x110000) }));
+    stripe.position.set(0, 0.8, 1.5);
+    carGroup.add(stripe);
+    
+    const wheelGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.6, 24);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const positions = [[-1.2,0.3,-1.5],[1.2,0.3,-1.5],[-1.2,0.3,1.8],[1.2,0.3,1.8]];
+    positions.forEach(p => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.rotation.z = Math.PI/2;
+      w.position.set(p[0], p[1], p[2]);
+      w.castShadow = true;
+      carGroup.add(w);
+    });
+    
+    carGroup.position.set(0, 0.3, -8);
+    carGroup.rotation.y = Math.PI;
+    scene.add(carGroup);
+
+    // skill nodes
+    const nodePositions = [12, 22, 32, 42, 52];
+    const nodes = [];
+    nodePositions.forEach(z => {
+      const nodeGeo = new THREE.SphereGeometry(0.4, 16);
+      const nodeMat = new THREE.MeshStandardMaterial({ color: 0xff4d4d, emissive: new THREE.Color(0x110000) });
+      const node = new THREE.Mesh(nodeGeo, nodeMat);
+      node.position.set(3, 1.2, z);
+      scene.add(node);
+      nodes.push(node);
+      
+      const node2 = new THREE.Mesh(nodeGeo, nodeMat);
+      node2.position.set(-3, 1.2, z);
+      scene.add(node2);
+      nodes.push(node2);
+    });
+
+    // scroll handling
+    let scrollPercent = 0;
+    const startZ = -8;
+    const endZ = 95;
+    const speedDisplay = document.getElementById('speedDisplay');
+    const sectionIndicator = document.getElementById('sectionIndicator');
+
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      scrollPercent = Math.min(1, scrollY / maxScroll);
+      
+      carGroup.position.z = startZ + scrollPercent * (endZ - startZ);
+      
+      camera.position.z = 15 - scrollPercent * 8;
+      camera.position.y = 4 + scrollPercent * 2;
+      camera.lookAt(carGroup.position.x, carGroup.position.y+1, carGroup.position.z+3);
+      
+      speedDisplay.textContent = Math.floor(scrollPercent * 200);
+      if (scrollPercent < 0.1) sectionIndicator.textContent = 'start';
+      else if (scrollPercent < 0.2) sectionIndicator.textContent = 'education';
+      else if (scrollPercent < 0.35) sectionIndicator.textContent = 'workshops';
+      else if (scrollPercent < 0.5) sectionIndicator.textContent = 'skills';
+      else if (scrollPercent < 0.65) sectionIndicator.textContent = 'core';
+      else if (scrollPercent < 0.8) sectionIndicator.textContent = 'contact';
+      else sectionIndicator.textContent = 'pit lane';
+
+      const parallaxBg = document.getElementById('parallaxBg');
+      if (parallaxBg) {
+        parallaxBg.style.transform = `translateY(${scrollY * 0.1}px)`;
+      }
+    });
+
+    // loading
+    const needle = document.getElementById('needleFuture');
+    const loadingScreen = document.getElementById('loading-screen');
+    setTimeout(() => { needle.style.transform = 'rotate(80deg)'; }, 300);
+    setTimeout(() => { loadingScreen.style.opacity = '0'; loadingScreen.style.visibility = 'hidden'; }, 2800);
+
+    // chat toggle
+    const chatToggle = document.getElementById('chatToggle');
+    const responses = document.getElementById('chatResponses');
+    chatToggle.addEventListener('click', () => {
+      responses.style.display = responses.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // QA database
+    const qa = {
+      edu: 'B.E. ECE (3rd yr) · 12th: 89% · 10th: All Pass · Government College of Engineering, Salem',
+      skills: 'C, C++, Java, Python · Embedded Systems · DSA · DBMS · Networks · OS · Antenna',
+      workshops: 'Workshop 1: Hands-on Training with Measuring Instruments (CRO, multimeter, signal generators, circuit testing). Workshop 2: Embedded Systems with IoT (microcontrollers, sensor interfacing, IoT protocols). Both at GCE Salem.',
+      c: 'C: Strong foundation in structured programming and problem solving.',
+      cpp: 'C++: Object-Oriented Programming and data structures knowledge.',
+      java: 'Java: OOP concepts and basic application development.',
+      python: 'Python: Problem solving and scripting fundamentals.',
+      contact: '📍 Salem · tamil2006king@gmail.com · linkedin.com/in/tamilarasan-r-9a7b803b2',
+      resume: 'ECE student · Programming: C, C++, Java, Python · Core: Embedded, DSA, Networks, OS · Workshops: Hands-on training, Embedded IoT · Seeking IT/core roles.'
+    };
+
+    const dynamicAnswer = document.getElementById('dynamicAnswer');
+    
+    // Function to display and speak answer
+    function displayAndSpeak(answer) {
+      dynamicAnswer.innerHTML = '';
+      const lines = answer.split(' · ');
+      lines.forEach((line, idx) => {
+        const sp = document.createElement('span');
+        sp.style.display = 'block';
+        sp.style.opacity = '0';
+        sp.style.animation = `fadeIn 0.2s ${idx*0.15}s forwards`;
+        sp.textContent = '> ' + line;
+        dynamicAnswer.appendChild(sp);
+      });
+      
+      // Speak the answer
+      const utterance = new SpeechSynthesisUtterance(answer);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.voice = speechSynthesis.getVoices().find(v => v.name.includes('Google UK') || v.name.includes('Female')) || null;
+      speechSynthesis.speak(utterance);
+    }
+
+    // Button click handlers
+    document.querySelectorAll('[data-q]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const key = e.target.getAttribute('data-q');
+        const answer = qa[key] || 'Please ask about education, skills, workshops, or contact.';
+        displayAndSpeak(answer);
+        responses.style.display = 'block';
+      });
+    });
+
+    // Voice integration
+    const voiceBtn = document.getElementById('voiceBtn');
+    const waveform = document.getElementById('waveform');
+    let recognition = null;
+    let isListening = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isListening = true;
+        voiceBtn.classList.add('listening');
+        waveform.style.opacity = '1';
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        waveform.style.opacity = '0.5';
+      };
+
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript.toLowerCase();
+        dynamicAnswer.innerHTML = `<span>> You asked: "${text}"</span>`;
+        
+        // Process the voice input
+        let answer = '';
+        if (text.includes('education') || text.includes('study')) {
+          answer = qa.edu;
+        } else if (text.includes('skill') || text.includes('programming')) {
+          answer = qa.skills;
+        } else if (text.includes('workshop') || text.includes('training')) {
+          answer = qa.workshops;
+        } else if (text.includes('contact') || text.includes('email') || text.includes('linkedin')) {
+          answer = qa.contact;
+        } else if (text.includes('c') && !text.includes('cpp') && !text.includes('java')) {
+          answer = qa.c;
+        } else if (text.includes('cpp') || text.includes('c++')) {
+          answer = qa.cpp;
+        } else if (text.includes('java')) {
+          answer = qa.java;
+        } else if (text.includes('python')) {
+          answer = qa.python;
+        } else if (text.includes('summary') || text.includes('resume')) {
+          answer = qa.resume;
+        } else {
+          answer = "I can tell you about education, skills, workshops, programming languages (C, C++, Java, Python), contact details, or a summary. Please try again.";
+        }
+        
+        setTimeout(() => {
+          displayAndSpeak(answer);
+        }, 500);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        dynamicAnswer.innerHTML = '<span>> Sorry, I couldn\'t hear you. Please try again or use the buttons.</span>';
+      };
+    } else {
+      voiceBtn.style.opacity = '0.5';
+      voiceBtn.title = 'Speech recognition not supported in this browser';
+    }
+
+    voiceBtn.addEventListener('click', () => {
+      if (!recognition) {
+        alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+        return;
+      }
+      
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    });
+
+    // animation loop
+    let time = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.01;
+      
+      particles.rotation.y += 0.0002;
+      
+      nodes.forEach((node, index) => {
+        node.position.y = 1.2 + Math.sin(time * 2 + index) * 0.1;
+      });
+      
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // card observer for fade-in
+    const cards = document.querySelectorAll('.hologram-card');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.style.opacity = '1'; });
+    }, { threshold: 0.3 });
+    cards.forEach(c => { c.style.opacity = '0'; c.style.transition = 'opacity 0.8s'; obs.observe(c); });
+  </script>
+  <style>
+    .hologram-card { transition: opacity 0.8s, transform 0.3s; }
+    #dynamicAnswer span { animation: fadeIn 0.3s forwards; opacity:0; }
+    @keyframes fadeIn { to { opacity: 1; } }
+  </style>
+</body>
+</html>
