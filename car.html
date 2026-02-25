@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Tamilarasan R · Executive AI 3D Portfolio</title>
+  <!-- Fonts: Orbitron (headings) + Inter (body) -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      font-family: 'Inter', sans-serif;
+      background: #111214;
+      color: #f2f2f2;
+    }
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+    }
+    /* overlay content */
+    .content-overlay {
+      position: relative;
+      z-index: 20;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      pointer-events: none;
+    }
+    .section-spacer {
+      height: 100vh;
+      pointer-events: none;
+    }
+    /* executive glass panels */
+    .glass-panel {
+      background: rgba(20, 22, 26, 0.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 77, 77, 0.3);
+      border-radius: 48px;
+      padding: 2.5rem;
+      max-width: 700px;
+      box-shadow: 0 0 50px rgba(255, 77, 77, 0.1);
+      pointer-events: auto;
+      transition: opacity 0.5s, transform 0.5s;
+      opacity: 0;
+      transform: translateY(30px);
+      margin-left: auto;
+      border-left: 4px solid #ff4d4d;
+    }
+    .glass-panel.left {
+      margin-left: 0;
+      margin-right: auto;
+    }
+    .glass-panel.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .glass-panel h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: #ff4d4d;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+    /* executive HUD */
+    .hud {
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      background: rgba(20, 22, 26, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid #ff4d4d;
+      border-radius: 60px;
+      padding: 12px 30px;
+      z-index: 100;
+      font-family: 'Orbitron', sans-serif;
+      color: #ff4d4d;
+      box-shadow: 0 0 30px rgba(255, 77, 77, 0.2);
+    }
+    .progress-track {
+      display: inline-block;
+      width: 200px;
+      height: 6px;
+      background: #333;
+      border-radius: 6px;
+      margin-left: 20px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #ff4d4d;
+      border-radius: 6px;
+      box-shadow: 0 0 15px #ff4d4d;
+    }
+    /* AI orb assistant */
+    .ai-orb {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255, 77, 77, 0.15);
+      border: 2px solid #ff4d4d;
+      box-shadow: 0 0 30px #ff4d4d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 300;
+      backdrop-filter: blur(8px);
+      transition: 0.3s;
+    }
+    .ai-orb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 60px #ff4d4d;
+    }
+    .ai-orb i {
+      font-size: 2.5rem;
+      color: white;
+    }
+    .ai-chat {
+      position: fixed;
+      bottom: 120px;
+      right: 30px;
+      width: 380px;
+      background: rgba(20, 22, 26, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid #ff4d4d;
+      border-radius: 40px;
+      padding: 25px;
+      z-index: 350;
+      display: none;
+      color: #f2f2f2;
+      box-shadow: 0 0 60px #ff4d4d;
+    }
+    .chat-response {
+      background: #1a1c20;
+      border-radius: 24px;
+      padding: 20px;
+      margin: 15px 0;
+      border-left: 4px solid #ff4d4d;
+      min-height: 80px;
+      font-family: 'Inter', monospace;
+    }
+    .btn-red {
+      background: transparent;
+      border: 1px solid #ff4d4d;
+      color: #ff4d4d;
+      padding: 10px 20px;
+      border-radius: 60px;
+      margin: 5px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-red:hover {
+      background: #ff4d4d;
+      color: #111214;
+      box-shadow: 0 0 30px #ff4d4d;
+    }
+    .waveform {
+      display: flex;
+      gap: 5px;
+      height: 30px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .waveform span {
+      width: 4px;
+      height: 15px;
+      background: #ff4d4d;
+      border-radius: 4px;
+      animation: wave 1s infinite ease-in-out;
+    }
+    .waveform span:nth-child(2) { animation-delay: 0.2s; height: 25px; }
+    .waveform span:nth-child(3) { animation-delay: 0.4s; height: 20px; }
+    .waveform span:nth-child(4) { animation-delay: 0.3s; height: 30px; }
+    .waveform span:nth-child(5) { animation-delay: 0.1s; height: 18px; }
+    @keyframes wave {
+      0%,100% { transform: scaleY(0.6); opacity: 0.5; }
+      50% { transform: scaleY(1.2); opacity: 1; }
+    }
+    /* loading screen */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #111214;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .loader-text {
+      font-size: 2rem;
+      color: #ff4d4d;
+      text-shadow: 0 0 20px #ff4d4d;
+    }
+    @media (max-width: 800px) {
+      .glass-panel { padding: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="loader-text">Initializing AI Portfolio System...</div>
+  </div>
+
+  <div id="canvas-container"></div>
+  
+  <!-- Executive HUD -->
+  <div class="hud">
+    <span style="font-weight:800;">TAMILARASAN R</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span id="sectionLabel" style="margin-left:20px;">start</span>
+  </div>
+  
+  <!-- AI assistant orb -->
+  <div class="ai-orb" id="aiOrb">
+    <i class="fas fa-robot"></i>
+  </div>
+  
+  <!-- AI chat panel -->
+  <div class="ai-chat" id="aiChat">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="color:#ff4d4d; font-family:'Orbitron';">AI RECRUITER</span>
+      <i class="fas fa-times" id="closeChat" style="cursor:pointer;"></i>
+    </div>
+    <div class="chat-response" id="chatAnswer">
+      <span>Hello, I'm your AI recruiter. Ask me about Tamilarasan's profile.</span>
+      <div class="waveform" id="waveform" style="display:none;">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div style="display:flex; flex-wrap:wrap;">
+      <button class="btn-red" data-question="education">📚 Education</button>
+      <button class="btn-red" data-question="skills">💻 Skills</button>
+      <button class="btn-red" data-question="workshops">🔧 Workshops</button>
+      <button class="btn-red" data-question="objective">🎯 Objective</button>
+      <button class="btn-red" data-question="contact">📫 Contact</button>
+      <button class="btn-red" data-question="c">C</button>
+      <button class="btn-red" data-question="cpp">C++</button>
+      <button class="btn-red" data-question="java">Java</button>
+      <button class="btn-red" data-question="python">Python</button>
+    </div>
+    <div style="margin-top:15px;">
+      <button class="btn-red" id="startVoice"><i class="fas fa-microphone"></i> Voice Question</button>
+      <span style="margin-left:10px; font-size:0.9rem; color:#aaa;">(ask about resume)</span>
+    </div>
+  </div>
+  
+  <!-- Content panels (rise on scroll) -->
+  <div class="content-overlay">
+    <div class="section-spacer"></div>
+    <!-- Hero panel (left) -->
+    <div class="glass-panel left visible" id="heroPanel" style="opacity:1; transform:none;">
+      <h2>Tamilarasan R</h2>
+      <p style="font-size:1.8rem; color:#ff7a7a;">Electronics and Communication Engineering Student</p>
+      <p style="font-size:1.2rem; line-height:1.8;">Dedicated and enthusiastic ECE student with knowledge in C, C++, Java, and Python. Seeking opportunities to apply technical skills and grow professionally.</p>
+    </div>
+    
+    <div class="section-spacer" id="edu-spacer"></div>
+    <div class="glass-panel" id="eduPanel">
+      <h2>Education</h2>
+      <div><strong>B.E – Electronics and Communication Engineering</strong><br>Government College of Engineering, Salem | 2023–2027 (3rd Year)</div>
+      <div style="margin-top:15px;"><strong>12th – 89%</strong></div>
+      <div style="margin-top:8px;"><strong>10th – All Pass</strong></div>
+    </div>
+    
+    <div class="section-spacer" id="skill-spacer"></div>
+    <div class="glass-panel left" id="skillPanel">
+      <h2>Skills Arena</h2>
+      <div style="display:flex; flex-wrap:wrap; gap:10px;">
+        <div class="skill-item" style="background:#1e1e24; padding:15px 25px; border-radius:60px; border-left:4px solid #ff4d4d;"><strong>C:</strong> Structured programming & logical thinking</div>
+        <div class="skill-item" style="background:#1e1e24; padding:15px 25px; border-radius:60px; border-left:4px solid #ff4d4d;"><strong>C++:</strong> OOP & data structures</div>
+        <div class="skill-item" style="background:#1e1e24; padding:15px 25px; border-radius:60px; border-left:4px solid #ff4d4d;"><strong>Java:</strong> OOP concepts & app fundamentals</div>
+        <div class="skill-item" style="background:#1e1e24; padding:15px 25px; border-radius:60px; border-left:4px solid #ff4d4d;"><strong>Python:</strong> Problem solving & scripting</div>
+      </div>
+    </div>
+    
+    <div class="section-spacer" id="workshop-spacer"></div>
+    <div class="glass-panel" id="workshopPanel">
+      <h2>🔧 Workshops & Training</h2>
+      <div style="margin-bottom:20px;">
+        <div style="background:#1e1e24; border-radius:24px; padding:20px; margin-bottom:15px; border-left:4px solid #ff4d4d;">
+          <strong style="color:#ff7a7a;">Hands-on Training with Measuring Instruments</strong>
+          <p style="margin-top:8px;">Practical exposure to electronic measuring instruments including CRO, multimeter, signal generators, and circuit testing techniques.</p>
+        </div>
+        <div style="background:#1e1e24; border-radius:24px; padding:20px; border-left:4px solid #ff4d4d;">
+          <strong style="color:#ff7a7a;">Embedded Systems with IoT</strong>
+          <p style="margin-top:8px;">Hands-on experience in microcontrollers, sensor interfacing, and IoT-based communication systems.</p>
+        </div>
+      </div>
+      <p style="color:#aaa;">📍 Government College of Engineering, Salem</p>
+    </div>
+    
+    <div class="section-spacer" id="core-spacer"></div>
+    <div class="glass-panel left" id="corePanel">
+      <h2>Core Knowledge</h2>
+      <div style="display:flex; flex-wrap:wrap; gap:10px;">
+        <span style="background:#1e1e24; padding:12px 24px; border-radius:60px;">Embedded Systems Basics</span>
+        <span style="background:#1e1e24; padding:12px 24px; border-radius:60px;">Antenna & Communication</span>
+        <span style="background:#1e1e24; padding:12px 24px; border-radius:60px;">Data Structures & Algorithms</span>
+        <span style="background:#1e1e24; padding:12px 24px; border-radius:60px;">Database Management Systems</span>
+        <span style="background:#1e1e24; padding:12px 24px; border-radius:60px;">Computer Networks</span>
+        <span style="background:#1e1e24; padding:12px 24px; border-radius:60px;">Operating Systems</span>
+      </div>
+    </div>
+    
+    <div class="section-spacer" id="contact-spacer"></div>
+    <div class="glass-panel" id="contactPanel">
+      <h2>Contact</h2>
+      <div><i class="fas fa-map-marker-alt" style="color:#ff4d4d;"></i> Salem, Tamil Nadu</div>
+      <div><i class="fas fa-envelope" style="color:#ff4d4d;"></i> tamil2006king@gmail.com</div>
+      <div><i class="fab fa-linkedin" style="color:#ff4d4d;"></i> linkedin.com/in/tamilarasan-r-9a7b803b2</div>
+    </div>
+    
+    <div class="section-spacer" id="final-spacer"></div>
+    <div class="glass-panel left" style="text-align:center;" id="finalPanel">
+      <h2>Final Pit Lane</h2>
+      <p style="font-size:2rem;">Engineered for Excellence.<br>Ready for the Future.</p>
+    </div>
+    <div style="height:20vh;"></div>
+  </div>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script type="module">
+    // ----- THREE.JS SETUP (dark executive track) -----
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111214);
+    
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 4, 15);
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    
+    // Lighting
+    const ambient = new THREE.AmbientLight(0x404060);
+    scene.add(ambient);
+    
+    const dirLight = new THREE.DirectionalLight(0xfff5f0, 1.2);
+    dirLight.position.set(3, 10, 5);
+    dirLight.castShadow = true;
+    dirLight.receiveShadow = true;
+    scene.add(dirLight);
+    
+    const redLight = new THREE.PointLight(0xff4d4d, 0.5, 30);
+    redLight.position.set(0, 2, 5);
+    scene.add(redLight);
+    
+    // Track (carbon surface)
+    const trackWidth = 10;
+    const trackLength = 120; // extended for more sections
+    const trackGeo = new THREE.PlaneGeometry(trackWidth, trackLength);
+    const trackMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.7, metalness: 0.3 });
+    const track = new THREE.Mesh(trackGeo, trackMat);
+    track.rotation.x = -Math.PI/2;
+    track.position.y = 0;
+    track.position.z = trackLength/2 - 5;
+    track.receiveShadow = true;
+    scene.add(track);
+    
+    // Red edge lines (subtle)
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0xff4d4d, emissive: new THREE.Color(0x220000) });
+    const leftEdge = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, trackLength), edgeMat);
+    leftEdge.position.set(-trackWidth/2 - 0.2, 0.03, trackLength/2 -5);
+    scene.add(leftEdge);
+    const rightEdge = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, trackLength), edgeMat);
+    rightEdge.position.set(trackWidth/2 + 0.2, 0.03, trackLength/2 -5);
+    scene.add(rightEdge);
+    
+    // Checkpoint markers (minimal red arches)
+    const gatePositions = [12, 28, 44, 60, 76, 92, 108];
+    gatePositions.forEach(z => {
+      const pillarMat = new THREE.MeshStandardMaterial({ color: 0xff4d4d, emissive: new THREE.Color(0x220000) });
+      const left = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.5, 0.3), pillarMat);
+      left.position.set(-5.5, 1.3, z);
+      scene.add(left);
+      const right = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.5, 0.3), pillarMat);
+      right.position.set(5.5, 1.3, z);
+      scene.add(right);
+    });
+    
+    // Car model (executive)
+    const carGroup = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 4.5), new THREE.MeshStandardMaterial({ color: 0x222428, emissive: new THREE.Color(0x111111) }));
+    body.position.y = 0.6; body.castShadow = true; body.receiveShadow = true;
+    carGroup.add(body);
+    
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.7, 2.4), new THREE.MeshStandardMaterial({ color: 0x33353c }));
+    cabin.position.set(0, 1.2, -0.4); cabin.castShadow = true;
+    carGroup.add(cabin);
+    
+    const wheelGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.6, 24);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    [[-1.3,0.4,-1.4],[1.3,0.4,-1.4],[-1.3,0.4,1.5],[1.3,0.4,1.5]].forEach(pos => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.rotation.z = Math.PI/2;
+      wheel.position.set(pos[0], pos[1], pos[2]);
+      wheel.castShadow = true;
+      carGroup.add(wheel);
+    });
+    
+    carGroup.position.set(0, 0.3, -5);
+    carGroup.rotation.y = Math.PI;
+    scene.add(carGroup);
+    
+    // Particles (subtle)
+    const particleCount = 200;
+    const particleGeo = new THREE.BufferGeometry();
+    const posArray = new Float32Array(particleCount*3);
+    for (let i=0; i<particleCount; i++) {
+      posArray[i*3] = (Math.random()-0.5)*30;
+      posArray[i*3+1] = Math.random()*8;
+      posArray[i*3+2] = (Math.random()-0.5)*100;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray,3));
+    const particleMat = new THREE.PointsMaterial({ color: 0xff4d4d, size: 0.04, transparent: true, opacity: 0.1 });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+    
+    // Scroll-driven animation
+    let scrollPercent = 0;
+    const startZ = -5;
+    const endZ = 105;
+    
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      scrollPercent = Math.min(1, scrollY / maxScroll);
+      
+      carGroup.position.z = startZ + scrollPercent * (endZ - startZ);
+      
+      // Camera follow
+      camera.position.z = 15 - scrollPercent * 5;
+      camera.position.y = 4 + scrollPercent * 1.5;
+      camera.lookAt(carGroup.position.x, carGroup.position.y+1, carGroup.position.z+2);
+      
+      // Update HUD
+      document.getElementById('progressFill').style.width = (scrollPercent * 100) + '%';
+      
+      // Section label
+      if (scrollPercent < 0.12) document.getElementById('sectionLabel').innerText = 'start';
+      else if (scrollPercent < 0.24) document.getElementById('sectionLabel').innerText = 'education';
+      else if (scrollPercent < 0.36) document.getElementById('sectionLabel').innerText = 'skills';
+      else if (scrollPercent < 0.48) document.getElementById('sectionLabel').innerText = 'workshops';
+      else if (scrollPercent < 0.6) document.getElementById('sectionLabel').innerText = 'core';
+      else if (scrollPercent < 0.8) document.getElementById('sectionLabel').innerText = 'contact';
+      else document.getElementById('sectionLabel').innerText = 'final';
+    });
+    
+    // Panels fade in on scroll (intersection observer)
+    const panels = document.querySelectorAll('.glass-panel');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.3 });
+    panels.forEach(p => observer.observe(p));
+    
+    // Loading screen
+    setTimeout(() => {
+      document.getElementById('loading-screen').style.opacity = '0';
+      setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 800);
+    }, 2000);
+    
+    // AI chat
+    const aiOrb = document.getElementById('aiOrb');
+    const aiChat = document.getElementById('aiChat');
+    const closeChat = document.getElementById('closeChat');
+    const chatAnswer = document.getElementById('chatAnswer');
+    const waveform = document.getElementById('waveform');
+    
+    aiOrb.addEventListener('click', () => { aiChat.style.display = 'block'; });
+    closeChat.addEventListener('click', () => { aiChat.style.display = 'none'; });
+    
+    // QA database
+    const qa = {
+      objective: "Dedicated and enthusiastic ECE student skilled in C, C++, Java, Python seeking IT/core opportunity.",
+      education: "B.E ECE (2023–2027) Government College of Engineering, Salem. 12th: 89%, 10th: All Pass. Currently 3rd Year.",
+      skills: "C: structured programming, C++: OOP/data structures, Java: OOP, Python: scripting.",
+      workshops: "Workshop 1: Hands-on Training with Measuring Instruments (CRO, multimeter, signal generators, circuit testing). Workshop 2: Embedded Systems with IoT (microcontrollers, sensor interfacing, IoT communication). Both at Government College of Engineering, Salem.",
+      c: "C: Strong foundation in structured programming and logical thinking.",
+      cpp: "C++: Object-Oriented Programming and data structures knowledge.",
+      java: "Java: OOP concepts and application fundamentals.",
+      python: "Python: Problem solving and scripting fundamentals.",
+      contact: "Salem, Tamil Nadu | tamil2006king@gmail.com | linkedin.com/in/tamilarasan-r-9a7b803b2"
+    };
+    
+    document.querySelectorAll('[data-question]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const q = e.target.getAttribute('data-question');
+        const answer = qa[q] || "Please ask about education, skills, workshops, or contact.";
+        chatAnswer.innerHTML = `<span>${answer}</span>`;
+        // Show waveform while speaking
+        waveform.style.display = 'flex';
+        const utterance = new SpeechSynthesisUtterance(answer);
+        utterance.rate = 0.9;
+        utterance.onend = () => { waveform.style.display = 'none'; };
+        speechSynthesis.speak(utterance);
+      });
+    });
+    
+    // Voice input
+    document.getElementById('startVoice').addEventListener('click', () => {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript.toLowerCase();
+        if (text.includes('education')) {
+          chatAnswer.innerHTML = `<span>${qa.education}</span>`;
+          speechSynthesis.speak(new SpeechSynthesisUtterance(qa.education));
+        } else if (text.includes('skill')) {
+          chatAnswer.innerHTML = `<span>${qa.skills}</span>`;
+          speechSynthesis.speak(new SpeechSynthesisUtterance(qa.skills));
+        } else if (text.includes('workshop')) {
+          chatAnswer.innerHTML = `<span>${qa.workshops}</span>`;
+          speechSynthesis.speak(new SpeechSynthesisUtterance(qa.workshops));
+        } else if (text.includes('contact')) {
+          chatAnswer.innerHTML = `<span>${qa.contact}</span>`;
+          speechSynthesis.speak(new SpeechSynthesisUtterance(qa.contact));
+        } else {
+          chatAnswer.innerHTML = `<span>Please ask about education, skills, workshops, or contact.</span>`;
+        }
+        waveform.style.display = 'flex';
+        setTimeout(() => { waveform.style.display = 'none'; }, 3000);
+      };
+    });
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      particles.rotation.y += 0.0002;
+      renderer.render(scene, camera);
+    }
+    animate();
+    
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
